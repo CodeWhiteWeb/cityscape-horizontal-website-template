@@ -15,7 +15,7 @@ A clean, modern, and responsive horizontal scroll portfolio template for web dev
 1. **Clone or download** this repository.
 2. Replace the profile image and text in `index.html` with your own.
 3. Customize the styles in `styles.css` as needed.
-4. (Optional) Integrate your own contact form backend.
+4. Integrate your own contact form backend.
 
 ## File Structure
 
