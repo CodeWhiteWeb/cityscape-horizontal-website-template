@@ -1,50 +1,109 @@
 const isMobile = window.innerWidth <= 768;
+const content = document.querySelector('.content');
 
 if (!isMobile) {
-    window.addEventListener('scroll', function() {
-        let scrollX = window.scrollX || document.documentElement.scrollLeft;
+    const canvas = document.createElement('canvas');
+    canvas.className = 'parallax-canvas';
+    document.body.appendChild(canvas);
 
-        document.querySelector('.layer-1').style.backgroundPosition = `${-scrollX * 0.05}px 0`;
-        document.querySelector('.layer-2').style.backgroundPosition = `${-scrollX * 0.1}px 0`;
-        document.querySelector('.layer-3').style.backgroundPosition = `${-scrollX * 0.15}px 0`;
-        document.querySelector('.layer-4').style.backgroundPosition = `${-scrollX * 0.2}px 0`;
-        document.querySelector('.layer-5').style.backgroundPosition = `${-scrollX * 0.25}px 0`;
-        document.querySelector('.layer-6').style.backgroundPosition = `${-scrollX * 0.3}px 0`;
+    const ctx = canvas.getContext('2d');
+    const layers = [
+        { src: 'assets/city_parallax/1.png', speed: 0.1, img: new Image() },
+        { src: 'assets/city_parallax/2.png', speed: 0.2, img: new Image() },
+        { src: 'assets/city_parallax/3.png', speed: 0.3, img: new Image() },
+        { src: 'assets/city_parallax/4.png', speed: 0.4, img: new Image() },
+        { src: 'assets/city_parallax/5.png', speed: 0.5, img: new Image() },
+        { src: 'assets/city_parallax/6.png', speed: 0.6, img: new Image() }
+    ];
+
+    let loaded = 0;
+    layers.forEach(layer => {
+        layer.img.src = layer.src;
+        layer.img.onload = () => {
+            loaded++;
+            if (loaded === layers.length) {
+                resizeCanvas();
+                drawParallax();
+            }
+        };
     });
+
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        drawParallax();
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    function drawParallax() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const scrollX = content.scrollLeft;
+        layers.forEach(layer => {
+            const img = layer.img;
+            if (!img.complete) return;
+            const imgW = img.width;
+            const imgH = img.height;
+            const drawH = canvas.height;
+            const drawW = imgW * (drawH / imgH);
+            let x = -scrollX * layer.speed % drawW;
+            if (x > 0) x -= drawW;
+            const y = (canvas.height - drawH) / 2;
+            for (; x < canvas.width; x += drawW) {
+                ctx.drawImage(img, x, y, drawW, drawH);
+            }
+        });
+    }
+
+    content.addEventListener('scroll', () => {
+        window.requestAnimationFrame(drawParallax);
+    });
+
+    resizeCanvas();
 }
 
-const slider = document.querySelector(".content");
 let isDown = false;
-let startX;
-let scrollLeft;
+let startX, scrollLeft;
 
-slider.addEventListener("mousedown", (e) => {
+content.addEventListener("mousedown", (e) => {
     isDown = true;
-    startX = e.pageX - slider.offsetLeft;
-    scrollLeft = slider.scrollLeft;
+    startX = e.pageX - content.offsetLeft;
+    scrollLeft = content.scrollLeft;
 });
 
-slider.addEventListener("mouseleave", () => isDown = false);
-slider.addEventListener("mouseup", () => isDown = false);
+content.addEventListener("mouseleave", () => isDown = false);
+content.addEventListener("mouseup", () => isDown = false);
 
-slider.addEventListener("mousemove", (e) => {
+content.addEventListener("mousemove", (e) => {
     if (!isDown) return;
     e.preventDefault();
-    const x = e.pageX - slider.offsetLeft;
+    const x = e.pageX - content.offsetLeft;
     const walk = (x - startX) * 2;
-    slider.scrollLeft = scrollLeft - walk;
+    content.scrollLeft = scrollLeft - walk;
 });
 
 if (isMobile) {
-    slider.addEventListener("touchstart", (e) => {
-        startX = e.touches[0].pageX - slider.offsetLeft;
-        scrollLeft = slider.scrollLeft;
+    content.addEventListener("touchstart", (e) => {
+        startX = e.touches[0].pageX - content.offsetLeft;
+        scrollLeft = content.scrollLeft;
     });
 
-    slider.addEventListener("touchmove", (e) => {
-        e.preventDefault();
-        const x = e.touches[0].pageX - slider.offsetLeft;
+    content.addEventListener("touchmove", (e) => {
+        e.preventDefault(); 
+        const x = e.touches[0].pageX - content.offsetLeft;
         const walk = (x - startX) * 2;
-        slider.scrollLeft = scrollLeft - walk;
+        content.scrollLeft = scrollLeft - walk;
     });
 }
+
+function matchBoxHeights() {
+    const statBox = document.querySelector('.stat-box');
+    const aboutBox = document.querySelector('.about-box');
+    if (statBox && aboutBox) {
+        const maxHeight = Math.max(statBox.scrollHeight, aboutBox.scrollHeight);
+        statBox.style.height = maxHeight + "px";
+        aboutBox.style.height = maxHeight + "px";
+    }
+}
+
+window.addEventListener("load", matchBoxHeights);
+window.addEventListener("resize", matchBoxHeights);
